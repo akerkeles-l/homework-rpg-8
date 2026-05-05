@@ -1,0 +1,214 @@
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              HAUNTED TOWER RPG - UML CLASS DIAGRAM                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                  STATE PATTERN                                               │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────┐
+│    <<interface>>    │
+│    HeroState        │
+├─────────────────────┤
+│ +getName(): String  │
+│ +modifyOutgoingDamage(int): int                                          ┌─────────────────────┐
+│ +modifyIncomingDamage(int): int                                         │    NormalState      │
+│ +onTurnStart(Hero): void                                                ├─────────────────────┤
+│ +onTurnEnd(Hero): void                                                  │ -duration: int      │
+│ +canAct(): boolean                                                      ├─────────────────────┤
+└──────────┬──────────┘                                                   │ +getName(): String  │
+           │                                                              │ +modifyOutgoingDamage(int): int
+           │ implements                                                   │ +modifyIncomingDamage(int): int
+           │                                                              │ +onTurnStart(Hero): void
+           ├──────────────────────┬───────────────────────┬──────────────┤ +onTurnEnd(Hero): void
+           │                      │                       │              │ +canAct(): boolean
+           ▼                      ▼                       ▼              └─────────────────────┘
+┌─────────────────────┐  ┌─────────────────────┐  ┌─────────────────────┐
+│   PoisonedState     │  │    StunnedState     │  │    BerserkState     │
+├─────────────────────┤  ├─────────────────────┤  ├─────────────────────┤
+│ -duration: int = 3  │  │ -duration: int = 1  │  │                     │
+│ -poisonDamage: 5    │  ├─────────────────────┤  ├─────────────────────┤
+├─────────────────────┤  │ +getName(): String  │  │ +getName(): String  │
+│ +getName(): String  │  │ +modifyOutgoingDamage(int): int                │
+│ +modifyOutgoingDamage(int): int              │  │ +modifyOutgoingDamage(int): int
+│ +modifyIncomingDamage(int): int              │  │ +modifyIncomingDamage(int): int
+│ +onTurnStart(Hero): void                     │  │ +onTurnStart(Hero): void
+│ +onTurnEnd(Hero): void                       │  │ +onTurnEnd(Hero): void
+│ +canAct(): boolean                           │  │ +canAct(): boolean
+└─────────────────────┘  └─────────────────────┘  └─────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 COMBATANT PACKAGE                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐        ┌──────────────────────────────────────────┐
+│              Hero                        │        │              Monster                     │
+├──────────────────────────────────────────┤        ├──────────────────────────────────────────┤
+│ -name: String                            │        │ -name: String                            │
+│ -hp: int                                 │        │ -hp: int                                 │
+│ -maxHp: int                              │        │ -attackPower: int                        │
+│ -attackPower: int                        │        ├──────────────────────────────────────────┤
+│ -defense: int                            │        │ +Monster(String, int, int)               │
+│ -state: HeroState                        │        │ +getName(): String                       │
+├──────────────────────────────────────────┤        │ +getHp(): int                            │
+│ +Hero(String, int, int, int)             │        │ +getAttackPower(): int                   │
+│ +getName(): String                       │        │ +isAlive(): boolean                      │
+│ +getHp(): int                            │        │ +takeDamage(int): void                   │
+│ +getMaxHp(): int                         │        │ +attack(Hero): void                      │
+│ +getAttackPower(): int                   │        └──────────────────────────────────────────┘
+│ +getDefense(): int                       │
+│ +isAlive(): boolean                      │        ┌──────────────────────────────────────────┐
+│ +getState(): HeroState                   │        │               uses                       │
+│ +setState(HeroState): void               │        │                                          │
+│ +takeDamage(int): void                   │        │     Monster ──────▶ Hero                 │
+│ +heal(int): void                         │        │     (attacks)      (target)              │
+│ +attack(Monster): int                    │        └──────────────────────────────────────────┘
+│ +onTurnStart(): void                     │
+│ +onTurnEnd(): void                       │
+└───────────────────┬──────────────────────┘
+                    │
+                    │ has a
+                    ▼
+            ┌───────────────┐
+            │   HeroState   │
+            │   (interface) │
+            └───────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                              TEMPLATE METHOD PATTERN - FLOOR PACKAGE                         │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                    ┌─────────────────────────────────────────────┐
+                    │            <<abstract>>                      │
+                    │              TowerFloor                      │
+                    ├─────────────────────────────────────────────┤
+                    │                                             │
+                    │ +explore(List<Hero>): FloorResult  (final)  │
+                    │                                             │
+                    │ #announce(): void               (hook)      │
+                    │ #setup(List<Hero>): void        (abstract)  │
+                    │ #resolveChallenge(List<Hero>): FloorResult  │
+                    │                                 (abstract)  │
+                    │ #shouldAwardLoot(FloorResult): boolean      │
+                    │                                 (hook)      │
+                    │ #awardLoot(List<Hero>, FloorResult): void   │
+                    │                                 (abstract)  │
+                    │ #cleanup(List<Hero>): void      (hook)      │
+                    │ #getFloorName(): String         (abstract)  │
+                    └───────────────────┬─────────────────────────┘
+                                        │
+                    ┌───────────────────┼───────────────────┬───────────────────┐
+                    │                   │                   │                   │
+                    ▼                   ▼                   ▼                   ▼
+        ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐  ┌───────────────────┐
+        │   CombatFloor     │  │    TrapFloor      │  │   PuzzleFloor     │  │    BossFloor      │
+        ├───────────────────┤  ├───────────────────┤  ├───────────────────┤  ├───────────────────┤
+        │ -floorName: String│  │ -floorName: String│  │ -floorName: String│  │ -floorName: String│
+        │ -monster: Monster │  │ -trapType: String │  │ -puzzleType: String│  │ -boss: Monster    │
+        ├───────────────────┤  ├───────────────────┤  │ -random: Random   │  ├───────────────────┤
+        │ +CombatFloor(...) │  │ +TrapFloor(...)   │  ├───────────────────┤  │ +BossFloor(...)   │
+        │ #getFloorName()   │  │ #getFloorName()   │  │ +PuzzleFloor(...) │  │ #getFloorName()   │
+        │ #setup()          │  │ #setup()          │  │ #getFloorName()   │  │ #setup()          │
+        │ #resolveChallenge│  │ #resolveChallenge│  │ #setup()          │  │ #resolveChallenge│
+        │ #awardLoot()      │  │ #awardLoot()      │  │ #resolveChallenge│  │ #awardLoot()      │
+        │ #announce()       │  │ #announce()       │  │ #awardLoot()      │  │ #announce()       │
+        └───────────────────┘  └───────────────────┘  │ #shouldAwardLoot()│  └───────────────────┘
+                                                      │ #announce()       │
+                                                      └───────────────────┘
+
+                    ┌─────────────────────────────────────────────┐
+                    │            FloorResult (data class)         │
+                    ├─────────────────────────────────────────────┤
+                    │ -cleared: boolean                           │
+                    │ -damageTaken: int                           │
+                    │ -summary: String                            │
+                    ├─────────────────────────────────────────────┤
+                    │ +FloorResult(boolean, int, String)          │
+                    │ +isCleared(): boolean                       │
+                    │ +getDamageTaken(): int                      │
+                    │ +getSummary(): String                       │
+                    └─────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    TOWER PACKAGE                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐        ┌──────────────────────────────────────────┐
+│           TowerRunner                    │        │         TowerRunResult (data class)      │
+├──────────────────────────────────────────┤        ├──────────────────────────────────────────┤
+│ -floors: List<TowerFloor>                │        │ -floorsCleared: int                      │
+├──────────────────────────────────────────┤        │ -heroesSurviving: int                    │
+│ +TowerRunner(List<TowerFloor>)           │        │ -reachedTop: boolean                     │
+│ +climb(List<Hero>): TowerRunResult       │        ├──────────────────────────────────────────┤
+│ -printPartyStatus(List<Hero>): void      │        │ +TowerRunResult(int, int, boolean)       │
+│                                          │        │ +getFloorsCleared(): int                 │
+│                                          │        │ +getHeroesSurviving(): int               │
+│                                          │        │ +isReachedTop(): boolean                 │
+└──────────────────────────────────────────┘        └──────────────────────────────────────────┘
+
+                    TowerRunner ──────────────────uses──────────────────▶ TowerFloor
+                    (orchestrates)                                      (multiple floors)
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      MAIN CLASS                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────┐
+│              Main                        │
+├──────────────────────────────────────────┤
+│ +main(String[]): void                    │
+│                                          │
+│  Creates:                                │
+│  - 3 Hero objects                        │
+│  - 5 Monster objects                     │
+│  - 9 TowerFloor objects (4 types)        │
+│  - 1 TowerRunner                         │
+│  - Executes climb and displays results   │
+└──────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                   RELATIONSHIP SUMMARY                                      │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│  Hero ◇─────── has a ────────▶ HeroState (composition/aggregation)                         │
+│                                                                                             │
+│  HeroState ◁────── implements ──── NormalState, PoisonedState, StunnedState, BerserkState  │
+│                                                                                             │
+│  TowerFloor ◁────── extends ────── CombatFloor, TrapFloor, PuzzleFloor, BossFloor          │
+│                                                                                             │
+│  TowerRunner ◇────── uses ────────▶ List<TowerFloor>                                       │
+│                                                                                             │
+│  TowerRunner ────── creates ──────▶ TowerRunResult                                         │
+│                                                                                             │
+│  TowerFloor ────── creates ──────▶ FloorResult                                            │
+│                                                                                             │
+│  Monster ────── attacks ────────▶ Hero                                                     │
+│                                                                                             │
+│  Hero ────── attacks ──────────▶ Monster                                                   │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                 PATTERN LEGEND                                              │
+├─────────────────────────────────────────────────────────────────────────────────────────────┤
+│                                                                                             │
+│  🎭 STATE PATTERN:                                                                          │
+│     - Context: Hero (holds current state)                                                   │
+│     - State Interface: HeroState                                                            │
+│     - Concrete States: NormalState, PoisonedState, StunnedState, BerserkState              │
+│     - States self-manage transitions (PoisonedState counts down, BerserkState checks HP)   │
+│                                                                                             │
+│  📋 TEMPLATE METHOD PATTERN:                                                                │
+│     - Abstract Class: TowerFloor                                                            │
+│     - Template Method: explore() (final)                                                    │
+│     - Abstract Methods: setup(), resolveChallenge(), awardLoot(), getFloorName()           │
+│     - Hook Methods: announce(), shouldAwardLoot(), cleanup()                               │
+│     - Concrete Subclasses: CombatFloor, TrapFloor, PuzzleFloor, BossFloor                  │
+│                                                                                             │
+└─────────────────────────────────────────────────────────────────────────────────────────────┘
